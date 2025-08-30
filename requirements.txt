@@ -1,0 +1,6 @@
+opencv-python
+mediapipe
+tensorflow==2.16.1      # or the latest compatible w/ your CUDA
+numpy
+scikit-learn
+pyttsx3

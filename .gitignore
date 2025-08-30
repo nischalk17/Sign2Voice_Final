@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.env
+# Data
+data/raw/
+data/*.npz
+# Models and metrics (keep if you really want them)
+models/*.h5
+metrics/
+# VS Code / OS
+.vscode/
+.DS_Store
+Thumbs.db
+
+# ─── old NLTK n-gram assets we’re dropping ─────────────────────────
+data/build_language_model.py
+utils/train_trigram.py
+models/trigram*.pkl
+data/corpus.txt
