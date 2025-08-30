@@ -1,4 +1,4 @@
-# Sign2Voice: Voice For All
+# Sign2Voice: Voice For All 
 
 
 # Project Goal:
@@ -18,7 +18,7 @@
 
 
 # Tech Stack and Libraries:
--> Python as the primary language.
+-> MERN Stack, Python
 -> OpenCV for webcam video capture and UI display.
 -> MediaPipe for robust hand landmark detection.
 -> TensorFlow 2.x / Keras for ML model training and inference.
@@ -28,6 +28,7 @@
 -> JSON for saving label mappings and model metadata.
 -> Tkinter + OpenCV video for GUI
 -> Local distilgpt2 (HuggingFace) for Smart word suggestions
+-> MongoDB for Database 
 
 
 # Dataset:
@@ -82,17 +83,14 @@
 -> Control/Suggestion buttons.
 -> Local distilgpt2 (HuggingFace) queried once every 5 s → top-3 next-token words for Smart Word Suggestions.
 -> Model loading and prediction in real-time with reasonable speed.
+-> User Registration and signup
+-> View and Edit History (CRUD)
 
 
 # Potential Enhancements:
--> Responsive and Interactive full-stack website with Modern UI, Proper Frontend and Backend
--> User Authentication (Login/Register)
+-> More Robust Password Security Mgmt with 2FA
 -> Light and Dark Mode and State Management Concept
--> CRUD Functionality- 
-    Create: Auto-save detected speech, 
-    Read: Display history, 
-    Update: Allow editing of saved transcripts, 
-    Delete: Remove unwanted records
+-> Mobile App
 -> More Robust TTS- Customize voices or languages
 -> Improve Smart Word Suggestions
 -> Reverse Module: Voice/Text to Sign Animation 
