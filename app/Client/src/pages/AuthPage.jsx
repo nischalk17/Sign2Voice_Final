@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useRef } from "react"
 import axios from "axios"
 import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -22,6 +22,11 @@ export default function AuthPage({ setIsAuthenticated }) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
   const [success, setSuccess] = useState("")
+
+  // Refs for sections
+  const featuresRef = useRef(null)
+  const aboutRef = useRef(null)
+  const contactRef = useRef(null)
 
   const handleChange = (e) => {
     setFormData({
@@ -95,31 +100,51 @@ export default function AuthPage({ setIsAuthenticated }) {
     })
   }
 
+  // Smooth scroll handler
+  const scrollToSection = (ref) => {
+    ref.current?.scrollIntoView({ behavior: "smooth" })
+  }
+
+  // Gradient border component
+  const GradientBorder = () => (
+    <div className="h-1 w-full bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 my-0"></div>
+  )
+
   return (
     <div className="min-h-screen bg-gray-900">
-      <header className="bg-gray-800 border-b border-gray-700">
-        <div className="max-w-7xl mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Hand className="w-8 h-8 text-blue-400" />
-              <span className="text-2xl font-bold text-white">Sign2Voice</span>
-            </div>
-            <nav className="hidden md:flex items-center gap-6">
-              <a href="#features" className="text-gray-300 hover:text-white transition-colors">
-                Features
-              </a>
-              <a href="#about" className="text-gray-300 hover:text-white transition-colors">
-                About
-              </a>
-              <a href="#contact" className="text-gray-300 hover:text-white transition-colors">
-                Contact
-              </a>
-            </nav>
+      {/* Header */}
+      <header className="bg-gray-800 border-b border-gray-700 fixed w-full z-50">
+        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Hand className="w-8 h-8 text-blue-400" />
+            <span className="text-2xl font-bold text-white">Sign2Voice</span>
           </div>
+          <nav className="hidden md:flex items-center gap-6">
+            <button
+              onClick={() => scrollToSection(featuresRef)}
+              className="text-gray-300 hover:text-white transition-colors"
+            >
+              Features
+            </button>
+            <button
+              onClick={() => scrollToSection(aboutRef)}
+              className="text-gray-300 hover:text-white transition-colors"
+            >
+              About
+            </button>
+            <button
+              onClick={() => scrollToSection(contactRef)}
+              className="text-gray-300 hover:text-white transition-colors"
+            >
+              Contact
+            </button>
+          </nav>
         </div>
       </header>
 
-      <div className="flex flex-col lg:flex-row">
+      {/* Hero + Auth Section */}
+      <div className="pt-24 flex flex-col lg:flex-row">
+        {/* Left Section */}
         <motion.div
           initial={{ opacity: 0, x: -50 }}
           animate={{ opacity: 1, x: 0 }}
@@ -170,6 +195,7 @@ export default function AuthPage({ setIsAuthenticated }) {
           </div>
         </motion.div>
 
+        {/* Right Section - Auth Card */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
@@ -315,6 +341,106 @@ export default function AuthPage({ setIsAuthenticated }) {
           </Card>
         </motion.div>
       </div>
+
+      {/* Gradient Borders and Sections */}
+      <GradientBorder />
+
+      {/* Features Section */}
+      <section ref={featuresRef} className="bg-gray-800 py-20 px-6 text-white">
+        <h2 className="text-4xl font-bold mb-6 text-center">Features</h2>
+        <div className="max-w-4xl mx-auto grid gap-8 md:grid-cols-2">
+          <div className="bg-gray-900 p-6 rounded-2xl shadow-lg">
+            <h3 className="text-xl font-semibold mb-2 text-blue-400">Real-time Gesture Recognition</h3>
+            <p className="text-gray-300">
+              Uses your webcam to capture American Sign Language (ASL) hand gestures and instantly translates them into text.
+            </p>
+          </div>
+          <div className="bg-gray-900 p-6 rounded-2xl shadow-lg">
+            <h3 className="text-xl font-semibold mb-2 text-blue-400">Voice Output</h3>
+            <p className="text-gray-300">
+              Converts the recognized signs into clear spoken words using a built-in text-to-speech engine.
+            </p>
+          </div>
+          <div className="bg-gray-900 p-6 rounded-2xl shadow-lg">
+            <h3 className="text-xl font-semibold mb-2 text-blue-400">Smart Word Suggestions</h3>
+            <p className="text-gray-300">
+              Suggests the next possible words as you sign, making communication faster and more natural.
+            </p>
+          </div>
+          <div className="bg-gray-900 p-6 rounded-2xl shadow-lg">
+            <h3 className="text-xl font-semibold mb-2 text-blue-400">User Accounts & History</h3>
+            <p className="text-gray-300">
+              Sign up to save your signing history, edit past sessions, and personalize your experience.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <GradientBorder />
+
+      {/* About Section */}
+      <section ref={aboutRef} className="bg-gray-900 py-20 px-6 text-white">
+        <h2 className="text-4xl font-bold mb-12 text-center">About Us</h2>
+        <div className="max-w-6xl mx-auto flex flex-col lg:flex-row items-center lg:items-start gap-12">
+          <div className="lg:w-1/2 space-y-5">
+            <p className="text-gray-300 leading-relaxed">
+              <span className="font-semibold text-blue-400">Sign2Voice</span> is built with a clear goal:
+              to bridge the communication gap between the Deaf community and the hearing world.
+              Our system translates American Sign Language (ASL) gestures into spoken words
+              and text instantly.
+            </p>
+            <p className="text-gray-300 leading-relaxed">
+              Using a webcam, our system detects your hand movements with <span className="font-semibold">AI-powered vision</span>,
+              processes them through a trained deep learning model, and produces real-time transcription.
+              This ensures smooth, natural communication.
+            </p>
+            <p className="text-gray-300 leading-relaxed">
+              Beyond simple translation, we provide <span className="font-semibold">smart word suggestions</span>,
+              <span className="font-semibold">text-to-speech output</span>, and <span className="font-semibold">user history</span>,
+              making the experience personalized and accessible.
+            </p>
+            <p className="text-gray-300 leading-relaxed">
+              Our mission is to make learning and using sign language more approachable for everyone.
+              Whether you are Deaf, hard of hearing, or simply learning ASL, Sign2Voice helps you
+              connect seamlessly.
+            </p>
+          </div>
+
+          <div className="lg:w-1/2 flex flex-col items-center">
+            <p className="text-lg text-blue-300 font-semibold mb-4 text-center">
+              📚 Learn basic ASL and complete daily goals 🚀
+            </p>
+            <img
+              src="/asl sign lang.jpg"
+              alt="Learn ASL Sign Language"
+              className="rounded-2xl shadow-2xl w-full h-auto max-h-[500px] object-cover"
+            />
+          </div>
+        </div>
+      </section>
+
+      <GradientBorder />
+
+      {/* Contact Section */}
+      <section ref={contactRef} className="bg-gray-800 py-10 px-6 text-white">
+        <h2 className="text-4xl font-bold mb-10 text-center">Contact Us</h2>
+        <div className="max-w-4xl mx-auto space-y-4 text-center">
+          <p className="text-gray-300 text-lg">
+            Reach us at{" "}
+            <a
+              href="mailto:support@sign2voice.com"
+              className="text-blue-400 hover:underline"
+            >
+              support@sign2voice.com
+            </a>
+          </p>
+          <p className="text-gray-300 text-lg">📞 +977-9863225429</p>
+          <p className="text-gray-300 text-lg">📍 Kathmandu, Nepal</p>
+          <p className="text-gray-400 text-sm mt-4">
+            &copy; {new Date().getFullYear()} Nischal Dhoj Kunwar. All Rights Reserved.
+          </p>
+        </div>
+      </section>
     </div>
   )
 }

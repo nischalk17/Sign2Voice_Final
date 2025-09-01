@@ -43,7 +43,7 @@ print("SIGN2VOICE_READY")
 
 # ---------------- Tkinter GUI ----------------
 root = tk.Tk()
-root.title("Sign2Voice - Minimal")
+root.title("Sign2Voice - Gui")
 root.configure(bg='#333333')
 root.geometry("950x650")
 
