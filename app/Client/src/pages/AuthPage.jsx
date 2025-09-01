@@ -6,11 +6,13 @@ import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { motion } from "framer-motion"
-import { Github, Mail, Hand, Zap, Users, Eye, EyeOff } from "lucide-react"
+import { Github, Mail, Hand, Zap, Users, Eye, EyeOff, Lock } from "lucide-react"
+import { useNavigate } from "react-router-dom";
 
 const API_BASE = "http://localhost:5000/api"
 
 export default function AuthPage({ setIsAuthenticated }) {
+  const navigate = useNavigate();
   const [isLogin, setIsLogin] = useState(true)
   const [showPassword, setShowPassword] = useState(false)
   const [formData, setFormData] = useState({
@@ -138,6 +140,14 @@ export default function AuthPage({ setIsAuthenticated }) {
             >
               Contact
             </button>
+            {/* Admin Login Button */}
+            <button
+              onClick={() => navigate("/admin-login")}
+              className="text-blue-400 hover:text-blue-300 font-medium flex items-center gap-1"
+            >
+              <Lock className="w-4 h-4" />
+              Admin
+            </button>
           </nav>
         </div>
       </header>
@@ -159,7 +169,7 @@ export default function AuthPage({ setIsAuthenticated }) {
               className="inline-flex items-center gap-2 bg-blue-900/50 text-blue-300 px-4 py-2 rounded-full text-sm font-medium mb-6"
             >
               <Zap className="w-4 h-4" />
-              AI-Powered Recognition
+              Final Year Project
             </motion.div>
 
             <h1 className="text-5xl lg:text-6xl font-bold text-white mb-6 text-balance leading-tight">
@@ -189,7 +199,7 @@ export default function AuthPage({ setIsAuthenticated }) {
             <div className="flex items-center gap-4 text-sm text-gray-400">
               <div className="flex items-center gap-2">
                 <Users className="w-4 h-4" />
-                <span>Trusted by 10,000+ users</span>
+                <span>Join to connect with other users</span>
               </div>
             </div>
           </div>
@@ -292,9 +302,18 @@ export default function AuthPage({ setIsAuthenticated }) {
                 </Button>
               </form>
 
-              <div className="text-center mt-6">
+              <div className="text-center mt-6 flex flex-col gap-2">
                 <button onClick={toggleMode} className="text-blue-400 hover:text-blue-300 font-medium">
                   {isLogin ? "Don't have an account? Sign up" : "Already have an account? Sign in"}
+                </button>
+
+                {/* Admin Login Button */}
+                <button
+                  onClick={() => router.push("/admin-login")}
+                  className="text-yellow-400 hover:text-yellow-300 font-medium flex items-center justify-center gap-2 mt-2"
+                >
+                  <Lock className="w-4 h-4" />
+                  Admin Login
                 </button>
               </div>
 
@@ -345,7 +364,7 @@ export default function AuthPage({ setIsAuthenticated }) {
       {/* Gradient Borders and Sections */}
       <GradientBorder />
 
-      {/* Features Section */}
+{/* Features Section */}
       <section ref={featuresRef} className="bg-gray-800 py-20 px-6 text-white">
         <h2 className="text-4xl font-bold mb-6 text-center">Features</h2>
         <div className="max-w-4xl mx-auto grid gap-8 md:grid-cols-2">
