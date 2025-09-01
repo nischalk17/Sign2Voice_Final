@@ -23,13 +23,30 @@ export default function Register({ setIsAuthenticated }) {
     })
   }
 
+  // Password validation helper
+  const validatePassword = (password) => {
+    const regex =
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{8,}$/
+    return regex.test(password)
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault()
     setLoading(true)
     setError("")
 
+    // Check confirm password
     if (formData.password !== formData.confirmPassword) {
       setError("Passwords do not match")
+      setLoading(false)
+      return
+    }
+
+    // Check password strength
+    if (!validatePassword(formData.password)) {
+      setError(
+        "Password must be at least 8 characters long, include uppercase, lowercase, number, and special character"
+      )
       setLoading(false)
       return
     }
@@ -56,16 +73,17 @@ export default function Register({ setIsAuthenticated }) {
     <div className="min-h-screen bg-gray-100 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">Create your Sign2Voice account</h2>
-          <p className="mt-2 text-center text-sm text-gray-600">Join the future of sign language communication</p>
+          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+            Create your Sign2Voice account
+          </h2>
+          <p className="mt-2 text-center text-sm text-gray-600">
+            Join the future of sign language communication
+          </p>
         </div>
 
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <div className="rounded-md shadow-sm -space-y-px">
             <div>
-              <label htmlFor="username" className="sr-only">
-                Username
-              </label>
               <input
                 id="username"
                 name="username"
@@ -78,9 +96,6 @@ export default function Register({ setIsAuthenticated }) {
               />
             </div>
             <div>
-              <label htmlFor="email" className="sr-only">
-                Email address
-              </label>
               <input
                 id="email"
                 name="email"
@@ -93,9 +108,6 @@ export default function Register({ setIsAuthenticated }) {
               />
             </div>
             <div>
-              <label htmlFor="password" className="sr-only">
-                Password
-              </label>
               <input
                 id="password"
                 name="password"
@@ -108,9 +120,6 @@ export default function Register({ setIsAuthenticated }) {
               />
             </div>
             <div>
-              <label htmlFor="confirmPassword" className="sr-only">
-                Confirm Password
-              </label>
               <input
                 id="confirmPassword"
                 name="confirmPassword"
@@ -124,7 +133,11 @@ export default function Register({ setIsAuthenticated }) {
             </div>
           </div>
 
-          {error && <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">{error}</div>}
+          {error && (
+            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+              {error}
+            </div>
+          )}
 
           <div>
             <button
@@ -137,7 +150,10 @@ export default function Register({ setIsAuthenticated }) {
           </div>
 
           <div className="text-center">
-            <Link to="/" className="font-medium text-indigo-600 hover:text-indigo-500">
+            <Link
+              to="/"
+              className="font-medium text-indigo-600 hover:text-indigo-500"
+            >
               Already have an account? Sign in
             </Link>
           </div>
