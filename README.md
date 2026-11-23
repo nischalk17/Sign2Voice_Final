@@ -1,5 +1,13 @@
 # Sign2Voice: Voice For All 
 
+> **Refinement in progress (branch `refine`).** The accuracy figures further down are the *original* project
+> numbers and are being re-measured. Honest, reproducible results live in
+> [`ml/results/eval_table.md`](ml/results/eval_table.md):
+> ~99% on a random split of the training dataset, ~96.7% on a leakage-aware block split, and only ~47-69% on
+> other signers / a real webcam. The original "99.15% on unseen data / no overfitting" claims below do **not** hold
+> for new users and cameras. What is trained here: the landmark CNN (from scratch). What is pretrained: MediaPipe
+> Hands and distilgpt2. Dataset: Kaggle "ASL Alphabet" (grassknoted/asl-alphabet).
+
 
 # Project Goal:
 -> To build a system that translates American Sign Language (ASL) hand gestures into spoken words or text in real-time.

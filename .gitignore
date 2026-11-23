@@ -51,3 +51,4 @@ docs/AUDIT.md
 ml/runs/*/model.keras
 ml/runs/*/split.npz
 *.log
+docs/STUDY_GUIDE.md
