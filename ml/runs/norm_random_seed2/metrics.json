@@ -1,0 +1,20 @@
+{
+  "accuracy": 0.9872630331753555,
+  "n": 20256,
+  "macro_f1": 0.9854829884592871,
+  "data": "ml/data/landmarks_v2.npz",
+  "mode": "norm",
+  "split": "random",
+  "name": "norm_random_seed2",
+  "epochs": 20,
+  "batch": 128,
+  "seed": 2,
+  "min_samples": 100,
+  "gap": 25,
+  "runs_dir": "ml/runs",
+  "n_train": 47263,
+  "n_test": 20256,
+  "classes": 28,
+  "final_train_acc": 0.9923359155654907,
+  "final_val_acc": 0.988787829875946
+}

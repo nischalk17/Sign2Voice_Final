@@ -1,135 +1,126 @@
-import argparse, json, os
-import numpy as np
-import tensorflow as tf
-from tensorflow.keras import layers, models
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import classification_report, confusion_matrix
-from contextlib import redirect_stdout
-import matplotlib.pyplot as plt
-import seaborn as sns
+"""Train the landmark CNN.
 
-def load_data(path):
-    data = np.load(path, allow_pickle=True)
-    X, y, classes = data["X"], data["y"], list(data["classes"])
-    return X, y, classes
+    python -m ml.train --data ml/data/landmarks_v2.npz --mode norm --split block --name norm_block
+
+Everything is written to ml/runs/<name>/ (model, classes, history, split indices, metrics, plots).
+Architecture, optimiser and hyper-parameters are the same as the original model
+(Conv1D64 -> Conv1D128 -> Dense256 -> Dropout0.3, Adam, batch 128, 20 epochs).
+
+--split random : stratified random 70/30 (how the ORIGINAL 99.15% was measured; leaky)
+--split block  : per class, test = whole contiguous runs of image ids, with a gap of `--gap` images
+                 removed from train around each test run, so near-duplicate neighbouring frames
+                 cannot sit on both sides of the split.
+"""
+import argparse, json, os, random
+import numpy as np
+
+from ml.features import prepare
+
+
+def set_seeds(seed):
+    import tensorflow as tf
+    random.seed(seed); np.random.seed(seed); tf.keras.utils.set_random_seed(seed)
+
 
 def build_model(num_classes):
-    model = models.Sequential([
-        layers.Reshape((21, 3), input_shape=(63,)),
+    from tensorflow.keras import layers, models
+    m = models.Sequential([
+        layers.Input(shape=(63,)),
+        layers.Reshape((21, 3)),
         layers.Conv1D(64, 3, activation="relu"),
         layers.Conv1D(128, 3, activation="relu"),
         layers.Flatten(),
         layers.Dense(256, activation="relu"),
         layers.Dropout(0.3),
-        layers.Dense(num_classes, activation="softmax")
+        layers.Dense(num_classes, activation="softmax"),
     ])
-    model.compile(optimizer="adam",
-                  loss="sparse_categorical_crossentropy",
-                  metrics=["accuracy"])
-    return model
+    m.compile(optimizer="adam", loss="sparse_categorical_crossentropy", metrics=["accuracy"])
+    return m
 
-def plot_metrics(report, class_names):
-    precision = [report[cls]["precision"] for cls in class_names]
-    recall = [report[cls]["recall"] for cls in class_names]
-    x = np.arange(len(class_names))
-    width = 0.35
 
-    plt.figure(figsize=(14, 6))
-    plt.bar(x - width/2, precision, width, label='Precision')
-    plt.bar(x + width/2, recall, width, label='Recall')
-    plt.xticks(x, class_names, rotation=90)
-    plt.ylabel("Score")
-    plt.title("Precision and Recall per Class")
-    plt.legend()
-    plt.tight_layout()
-    plt.savefig("metrics/precision_recall_bar_chart.png")
-    plt.close()
+def drop_rare_classes(X, y, classes, img_id, min_samples):
+    keep = [i for i, n in enumerate(np.bincount(y, minlength=len(classes))) if n >= min_samples]
+    remap = {old: new for new, old in enumerate(keep)}
+    m = np.isin(y, keep)
+    return (X[m], np.array([remap[v] for v in y[m]], np.int32), [classes[i] for i in keep],
+            None if img_id is None else img_id[m])
 
-def plot_confusion_matrix(cm, class_names):
-    plt.figure(figsize=(12, 10))
-    sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', xticklabels=class_names, yticklabels=class_names)
-    plt.title("Confusion Matrix")
-    plt.xlabel("Predicted")
-    plt.ylabel("Actual")
-    plt.tight_layout()
-    plt.savefig("metrics/confusion_matrix.png")
-    plt.close()
 
-def main(args):
-    # Load data
-    X, y, classes = load_data(args.train)
-    os.makedirs("models", exist_ok=True)
-    os.makedirs("metrics", exist_ok=True)
+def random_split(y, seed, test_size=0.3):
+    from sklearn.model_selection import train_test_split
+    idx = np.arange(len(y))
+    tr, te = train_test_split(idx, test_size=test_size, stratify=y, random_state=seed)
+    return np.sort(tr), np.sort(te)
 
-    # Drop low sample classes
-    min_samples = 100
-    keep_mask = np.bincount(y) >= min_samples
-    keep_classes = [i for i, k in enumerate(keep_mask) if k]
-    mapping = {old: new for new, old in enumerate(keep_classes)}
-    indices = np.isin(y, keep_classes)
 
-    X = X[indices]
-    y = np.vectorize(mapping.get)(y[indices])
-    classes = [classes[i] for i in keep_classes]
+def block_split(y, img_id, seed, n_blocks=10, test_blocks=3, gap=25):
+    rng = np.random.default_rng(seed)
+    train, test = [], []
+    for c in np.unique(y):
+        idx = np.where(y == c)[0]
+        idx = idx[np.argsort(img_id[idx], kind="stable")]       # temporal order within the class
+        n = len(idx)
+        edges = np.linspace(0, n, n_blocks + 1).astype(int)
+        chosen = set(rng.choice(n_blocks, test_blocks, replace=False).tolist())
+        is_test = np.zeros(n, bool)
+        for b in chosen:
+            is_test[edges[b]:edges[b + 1]] = True
+        near_test = is_test.copy()                               # widen test runs by `gap` each side
+        for s in range(1, gap + 1):
+            near_test[:-s] |= is_test[s:]
+            near_test[s:] |= is_test[:-s]
+        test.append(idx[is_test]); train.append(idx[~near_test])
+    return np.sort(np.concatenate(train)), np.sort(np.concatenate(test))
 
-    print(f"✅ {len(classes)} classes kept | Total samples: {len(X)}")
 
-    X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=0.3, stratify=y, random_state=42
-    )
-    print(f"📦 Train: {len(X_train)} | Test: {len(X_test)}")
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--data", required=True)
+    ap.add_argument("--mode", choices=["raw", "norm"], default="norm")
+    ap.add_argument("--split", choices=["random", "block"], default="block")
+    ap.add_argument("--name", required=True)
+    ap.add_argument("--epochs", type=int, default=20)
+    ap.add_argument("--batch", type=int, default=128)
+    ap.add_argument("--seed", type=int, default=42)
+    ap.add_argument("--min_samples", type=int, default=100)
+    ap.add_argument("--gap", type=int, default=25)
+    ap.add_argument("--runs_dir", default="ml/runs")
+    a = ap.parse_args()
 
-    model = build_model(num_classes=len(classes))
+    set_seeds(a.seed)
+    d = np.load(a.data, allow_pickle=True)
+    X, y, classes = d["X"], d["y"], [str(c) for c in d["classes"]]
+    img_id = d["img_id"] if "img_id" in d.files else None
+    if a.split == "block" and img_id is None:
+        raise SystemExit("block split needs img_id in the .npz (re-run ml.extract_landmarks)")
+    X, y, classes, img_id = drop_rare_classes(X, y, classes, img_id, a.min_samples)
+    print(f"{len(classes)} classes, {len(X)} samples")
 
-    # Save model architecture
-    with open("models/landmark_cnn_architecture.txt", "w") as f:
-        with redirect_stdout(f):
-            model.summary()
+    tr, te = random_split(y, a.seed) if a.split == "random" else block_split(y, img_id, a.seed, gap=a.gap)
+    print(f"split={a.split}: train {len(tr)} | test {len(te)} | dropped-by-gap {len(y) - len(tr) - len(te)}")
+    assert not set(tr) & set(te)
 
-    history = model.fit(
-        X_train, y_train,
-        epochs=args.epochs,
-        batch_size=args.batch,
-        validation_split=0.1,
-        verbose=2
-    )
+    Xf = prepare(X, a.mode)
+    model = build_model(len(classes))
+    # Keras' validation_split takes the LAST 10% of the arrays without shuffling, and the data is
+    # ordered by class, so the training indices must be shuffled (seeded) before fitting.
+    tr_fit = np.random.default_rng(a.seed).permutation(tr)
+    hist = model.fit(Xf[tr_fit], y[tr_fit], epochs=a.epochs, batch_size=a.batch, validation_split=0.1, verbose=2)
 
-    with open("models/landmark_cnn_history.json", "w") as f:
-        json.dump(history.history, f)
+    out = os.path.join(a.runs_dir, a.name)
+    os.makedirs(out, exist_ok=True)
+    from ml.eval import evaluate
+    res = evaluate(model, Xf[te], y[te], classes, out)
+    res.update(vars(a)); res.update(n_train=int(len(tr)), n_test=int(len(te)), classes=len(classes),
+                                    final_train_acc=float(hist.history["accuracy"][-1]),
+                                    final_val_acc=float(hist.history["val_accuracy"][-1]))
+    json.dump(res, open(os.path.join(out, "metrics.json"), "w"), indent=2)
+    json.dump(hist.history, open(os.path.join(out, "history.json"), "w"))
+    json.dump(classes, open(os.path.join(out, "classes.json"), "w"))
+    np.savez(os.path.join(out, "split.npz"), train=tr, test=te)
+    model.save(os.path.join(out, "model.keras"))
+    print(f"TEST accuracy ({a.split} split, {a.mode}): {res['accuracy']:.4f}  -> {out}")
 
-    test_loss, test_acc = model.evaluate(X_test, y_test, verbose=0)
-    print(f"\n🎯 Test accuracy: {test_acc:.4f}")
-    with open("models/landmark_cnn_accuracy.txt", "w") as f:
-        f.write(f"Test accuracy: {test_acc:.4f}\n")
-
-    y_pred = model.predict(X_test)
-    y_pred_labels = np.argmax(y_pred, axis=1)
-
-    report_dict = classification_report(
-        y_test, y_pred_labels, target_names=classes, output_dict=True, digits=3
-    )
-    with open("metrics/classification_report.json", "w") as f:
-        json.dump(report_dict, f, indent=4)
-    print("\n📊 Classification report saved to metrics/classification_report.json")
-
-    # Plot metrics
-    plot_metrics(report_dict, classes)
-    print("📈 Bar chart saved to metrics/precision_recall_bar_chart.png")
-
-    cm = confusion_matrix(y_test, y_pred_labels)
-    plot_confusion_matrix(cm, classes)
-    print("📉 Confusion matrix saved to metrics/confusion_matrix.png")
-
-    model.save("models/landmark_cnn.h5")
-    with open("models/landmark_classes.json", "w") as f:
-        json.dump(classes, f)
-
-    print("✅ All artifacts saved in /models and /metrics folders.")
 
 if __name__ == "__main__":
-    import numpy as np
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--train", required=True, help="Path to .npz landmark file")
-    parser.add_argument("--epochs", type=int, default=20)
-    parser.add_argument("--batch", type=int, default=128)
-    main(parser.parse_args())
+    main()

@@ -1,99 +1,87 @@
-# utils/extract_landmarks.py
 """
-Extracts MediaPipe-Hand landmarks from every image in an ASL dataset folder
-and stores them (X, y) together with the class list in a single .npz file.
+Extract MediaPipe hand landmarks from the Kaggle "ASL Alphabet" training folder.
 
-Example run:
-    python -m utils.extract_landmarks \
-        --dataset data/raw/asl_alphabet_train/asl_alphabet_train \
-        --output  data/landmarks_train.npz
+    python -m ml.extract_landmarks --dataset raw/asl_alphabet_train --output ml/data/landmarks_v2.npz
+
+Saved arrays (raw MediaPipe coordinates; normalisation happens later, in ml/features.py):
+    X        (N, 63) float32   21 landmarks x (x, y, z)
+    y        (N,)    int32     class index into `classes`
+    classes  (C,)    str       sorted folder names
+    img_id   (N,)    int32     numeric part of the file name (A123.jpg -> 123); Kaggle frames are
+                               consecutive video frames, so neighbouring ids are near-duplicates
+    stats    JSON str          per-class seen / kept counts
+
+Difference from the original script: static_image_mode=True. The original used False, which makes
+MediaPipe *track* from the previous image, so one image's detection could depend on the previous one.
+Images in a folder are independent, so static mode is the correct setting.
 """
+import argparse, json, os, re
+from multiprocessing import Pool
 
-import os
 import cv2
 import numpy as np
 import mediapipe as mp
 from tqdm import tqdm
 
-mp_hands = mp.solutions.hands
+IMG_EXT = (".jpg", ".jpeg", ".png")
+_num = re.compile(r"(\d+)")
 
 
-def extract_landmarks_from_image(image, hands_detector):
-    """Return a flat 63-value landmark vector or None if no hand detected."""
-    # OPTIONAL: uncomment if many images are upside-down
-    # image = cv2.rotate(image, cv2.ROTATE_180)
-
-    # OPTIONAL: uncomment if mirroring helps detection
-    # image = cv2.flip(image, 1)
-
-    img_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-    results = hands_detector.process(img_rgb)
-    if not results.multi_hand_landmarks:
+def landmarks_from_image(image_bgr, hands):
+    res = hands.process(cv2.cvtColor(image_bgr, cv2.COLOR_BGR2RGB))
+    if not res.multi_hand_landmarks:
         return None
+    hand = res.multi_hand_landmarks[0]
+    return [c for lm in hand.landmark for c in (lm.x, lm.y, lm.z)]
 
-    hand = results.multi_hand_landmarks[0]
-    return [c for lm in hand.landmark for c in (lm.x, lm.y, lm.z)]  # 63 values
+
+def process_class(args):
+    class_idx, class_name, class_dir, min_conf = args
+    hands = mp.solutions.hands.Hands(static_image_mode=True, max_num_hands=1,
+                                     min_detection_confidence=min_conf)
+    files = sorted(f for f in os.listdir(class_dir) if f.lower().endswith(IMG_EXT))
+    X, ids = [], []
+    for f in files:
+        img = cv2.imread(os.path.join(class_dir, f))
+        if img is None:
+            continue
+        vec = landmarks_from_image(img, hands)
+        if vec is not None:
+            m = _num.search(f)
+            X.append(vec)
+            ids.append(int(m.group(1)) if m else -1)
+    hands.close()
+    return class_idx, class_name, len(files), np.array(X, np.float32).reshape(-1, 63), np.array(ids, np.int32)
 
 
-def process_dataset(dataset_path: str, output_path: str):
-    hands = mp_hands.Hands(
-        static_image_mode=False,          # run detector on each image
-        max_num_hands=1,
-        min_detection_confidence=0.20,    # more lenient than default 0.5
-    )
-
-    classes = sorted(
-        d for d in os.listdir(dataset_path)
-        if os.path.isdir(os.path.join(dataset_path, d))
-    )
-    print(f"Classes ({len(classes)}): {classes}")
-
-    X, y = [], []
-    total_seen, total_kept = 0, 0
-
-    for label, class_name in enumerate(classes):
-        class_dir = os.path.join(dataset_path, class_name)
-        img_files = [
-            f for f in os.listdir(class_dir)
-            if f.lower().endswith((".jpg", ".jpeg", ".png"))
-        ]
-
-        print(f"\n▶ {class_name}: {len(img_files)} images")
-        kept_here = 0
-        for img_file in tqdm(img_files, mininterval=0.1, leave=False):
-            total_seen += 1
-            img_path = os.path.join(class_dir, img_file)
-            img = cv2.imread(img_path)
-            if img is None:
-                continue
-
-            vec = extract_landmarks_from_image(img, hands)
-            if vec is not None:
-                X.append(vec)
-                y.append(label)
-                total_kept += 1
-                kept_here += 1
-
-        print(f"   ✓ kept {kept_here} / {len(img_files)}")
-
-    print(f"\nOverall kept {total_kept} of {total_seen} images "
-          f"({(total_kept/total_seen):.1%})")
-
-    X = np.array(X, dtype=np.float32)
-    y = np.array(y, dtype=np.int32)
-
-    os.makedirs(os.path.dirname(output_path), exist_ok=True)
-    np.savez_compressed(output_path, X=X, y=y, classes=classes)
-    print(f"Saved → {output_path}")
+def main(dataset, output, min_conf, workers, limit):
+    classes = sorted(d for d in os.listdir(dataset) if os.path.isdir(os.path.join(dataset, d)))
+    print(f"{len(classes)} classes: {classes}")
+    jobs = [(i, c, os.path.join(dataset, c), min_conf) for i, c in enumerate(classes)]
+    if limit:  # quick smoke test: only the first N classes
+        jobs = jobs[:limit]
+    X_all, y_all, id_all, stats = [], [], [], {}
+    with Pool(workers) as pool:
+        for idx, name, seen, X, ids in tqdm(pool.imap_unordered(process_class, jobs), total=len(jobs)):
+            X_all.append(X); id_all.append(ids); y_all.append(np.full(len(X), idx, np.int32))
+            stats[name] = {"seen": seen, "kept": int(len(X))}
+            print(f"  {name}: kept {len(X)}/{seen}", flush=True)
+    X = np.concatenate(X_all); y = np.concatenate(y_all); img_id = np.concatenate(id_all)
+    order = np.lexsort((img_id, y))                      # deterministic order: class, then image id
+    X, y, img_id = X[order], y[order], img_id[order]
+    os.makedirs(os.path.dirname(output) or ".", exist_ok=True)
+    np.savez_compressed(output, X=X, y=y, classes=np.array(classes), img_id=img_id,
+                        stats=json.dumps(stats))
+    seen = sum(s["seen"] for s in stats.values())
+    print(f"Saved {output}: {len(X)} of {seen} images kept ({len(X)/seen:.1%})")
 
 
 if __name__ == "__main__":
-    import argparse
-    parser = argparse.ArgumentParser(description="ASL landmark extractor")
-    parser.add_argument("--dataset", required=True,
-                        help="Path to ASL dataset folder (letters A-Z subdirs)")
-    parser.add_argument("--output", default="data/landmarks.npz",
-                        help="Output .npz file path")
-    args = parser.parse_args()
-
-    process_dataset(args.dataset, args.output)
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--dataset", required=True)
+    ap.add_argument("--output", default="ml/data/landmarks_v2.npz")
+    ap.add_argument("--min_conf", type=float, default=0.20)   # same as the original extraction
+    ap.add_argument("--workers", type=int, default=max(1, (os.cpu_count() or 2) - 1))
+    ap.add_argument("--limit_classes", type=int, default=0, help="smoke test: first N classes only")
+    a = ap.parse_args()
+    main(a.dataset, a.output, a.min_conf, a.workers, a.limit_classes)
