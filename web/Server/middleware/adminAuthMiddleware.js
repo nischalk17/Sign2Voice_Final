@@ -1,0 +1,26 @@
+// middleware/adminAuthMiddleware.js
+import jwt from "jsonwebtoken";
+import Admin from "../model/Admin.js";  // <--- fixed path
+
+// Read lazily: ES-module imports run before dotenv.config() in main.js,
+// so a module-level read would not see the value from .env.
+const getJwtSecret = () => {
+  if (!process.env.JWT_SECRET) throw new Error("JWT_SECRET is not set");
+  return process.env.JWT_SECRET;
+};
+
+export const verifyAdminToken = async (req, res, next) => {
+  const token = req.headers.authorization?.split(" ")[1];
+  if (!token) return res.status(401).json({ message: "No token provided" });
+
+  try {
+    const decoded = jwt.verify(token, getJwtSecret());
+    const admin = await Admin.findById(decoded.id);
+    if (!admin) return res.status(401).json({ message: "Invalid token" });
+
+    req.admin = admin;
+    next();
+  } catch (err) {
+    res.status(401).json({ message: "Unauthorized" });
+  }
+};
