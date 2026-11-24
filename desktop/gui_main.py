@@ -23,7 +23,7 @@ from suggestions import get_suggestions
 # ---------------- Paths ----------------
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 ML_MODELS = os.path.join(BASE_DIR, "..", "ml", "models")
-MODEL_PATH = os.path.join(ML_MODELS, "landmark_cnn.h5")
+MODEL_PATH = os.path.join(ML_MODELS, "landmark_cnn.keras")
 CLASSES_PATH = os.path.join(ML_MODELS, "landmark_classes.json")
 
 # ---------------- Load Model ----------------

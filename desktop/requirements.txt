@@ -1,0 +1,7 @@
+# Desktop GUI. Python 3.11. Install the ML pins first:  pip install -r ml/requirements.txt
+-r ../ml/requirements.txt
+Pillow>=10
+requests>=2.31          # talks to the web server (login / save transcript)
+pyttsx3>=2.90           # offline text-to-speech
+transformers>=4.40      # distilgpt2 word suggestions (pretrained, unmodified)
+torch>=2.2

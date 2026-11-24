@@ -6,7 +6,7 @@ from tts import speak
 # ── Load model & class labels ──────────────────────────────────────────────
 import os
 _ML = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "ml", "models")
-model = tf.keras.models.load_model(os.path.join(_ML, "landmark_cnn.h5"))
+model = tf.keras.models.load_model(os.path.join(_ML, "landmark_cnn.keras"))
 class_names = json.load(open(os.path.join(_ML, "landmark_classes.json")))
 
 # ── Mediapipe setup ───────────────────────────────────────────────────────
