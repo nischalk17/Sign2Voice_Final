@@ -7,6 +7,8 @@
 > other signers / a real webcam. The original "99.15% on unseen data / no overfitting" claims below do **not** hold
 > for new users and cameras. What is trained here: the landmark CNN (from scratch). What is pretrained: MediaPipe
 > Hands and distilgpt2. Dataset: Kaggle "ASL Alphabet" (grassknoted/asl-alphabet).
+> Adversarial and natural-perturbation robustness (FGSM/PGD, rotation, jitter, adversarial training) is reported in
+> [`docs/ROBUSTNESS.md`](docs/ROBUSTNESS.md).
 
 
 # Project Goal:

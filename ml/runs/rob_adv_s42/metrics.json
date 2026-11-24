@@ -1,0 +1,14 @@
+{
+  "accuracy": 0.9620815641354794,
+  "n": 20254,
+  "macro_f1": 0.9591250561881864,
+  "variant": "adv",
+  "seed": 42,
+  "eps": 0.01,
+  "adv_steps": 5,
+  "split": "block",
+  "mode": "raw+adv",
+  "n_train": 44090,
+  "n_test": 20254,
+  "classes": 28
+}
