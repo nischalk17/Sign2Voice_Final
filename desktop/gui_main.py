@@ -46,7 +46,7 @@ print("SIGN2VOICE_READY")
 root = tk.Tk()
 root.title("Sign2Voice - Gui")
 root.configure(bg='#333333')
-root.geometry("950x650")
+root.resizable(True, True)
 
 # ---------------- Color Palette ----------------
 COLORS = {
@@ -64,7 +64,7 @@ COLORS = {
 }
 
 # ---------------- Global Variables ----------------
-jwt_token = None
+jwt_token = os.environ.pop("SIGN2VOICE_TOKEN", None)  # set when launched from the web dashboard
 user_info = None
 sentence = ""
 session_id = str(uuid.uuid4())
@@ -110,17 +110,32 @@ def initialize_gui_after_login():
     global video_panel, current_var, sentence_var, sugg_btns, sugg_text, sentence, cap
     
     login_frame.pack_forget()
+
+    # Scrollable page: everything lives in `content`, inside a canvas with a vertical scrollbar,
+    # so every button stays reachable whatever the window size.
+    canvas = tk.Canvas(root, bg=COLORS['bg_primary'], highlightthickness=0)
+    vbar = tk.Scrollbar(root, orient="vertical", command=canvas.yview)
+    canvas.configure(yscrollcommand=vbar.set)
+    vbar.pack(side="right", fill="y")
+    canvas.pack(side="left", fill="both", expand=True)
+    content = tk.Frame(canvas, bg=COLORS['bg_primary'])
+    win_id = canvas.create_window((0, 0), window=content, anchor="nw")
+    content.bind("<Configure>", lambda e: canvas.configure(scrollregion=canvas.bbox("all")))
+    canvas.bind("<Configure>", lambda e: canvas.itemconfig(win_id, width=e.width))
+    root.bind_all("<MouseWheel>", lambda e: canvas.yview_scroll(int(-e.delta / 120), "units"))
     
     # ---------------- Video Frame ----------------
-    video_frame = tk.Frame(root, bg=COLORS['bg_secondary'], relief='solid', bd=2)
+    video_frame = tk.Frame(content, bg=COLORS['bg_secondary'], relief='solid', bd=2)
     video_frame.grid(row=0, column=0, columnspan=5, padx=20, pady=10, sticky='ew')
     video_panel = tk.Label(video_frame, bg=COLORS['bg_secondary'])
     video_panel.pack(padx=5, pady=5)
 
     # ---------------- Status Labels ----------------
-    status_frame = tk.Frame(root, bg=COLORS['bg_primary'])
+    status_frame = tk.Frame(content, bg=COLORS['bg_primary'])
     status_frame.grid(row=1, column=0, columnspan=5, padx=20, pady=(0, 10), sticky='ew')
 
+    global status_var
+    status_var = tk.StringVar(value="")
     current_var = tk.StringVar(value="Current: _")
     sentence_var = tk.StringVar(value="Sentence:")
 
@@ -132,14 +147,16 @@ def initialize_gui_after_login():
     sentence_label = tk.Label(status_frame, textvariable=sentence_var,
                              font=("Segoe UI", 14),
                              fg=COLORS['text_primary'], bg=COLORS['bg_primary'],
-                             wraplength=900, justify='left')
+                             wraplength=640, justify='left')
     sentence_label.pack(anchor='w')
+    tk.Label(status_frame, textvariable=status_var, font=("Segoe UI", 11),
+             fg='#F9E79F', bg=COLORS['bg_primary']).pack(anchor='w', pady=(4, 0))
 
     # ---------------- Smart Suggestions ----------------
     sugg_btns = []
     sugg_text = [tk.StringVar(value="") for _ in range(3)]
 
-    sugg_frame = tk.Frame(root, bg=COLORS['bg_primary'])
+    sugg_frame = tk.Frame(content, bg=COLORS['bg_primary'])
     sugg_frame.grid(row=2, column=0, columnspan=5, padx=20, pady=(0, 10), sticky='ew')
 
     sugg_title = tk.Label(sugg_frame, text="💡 Smart Suggestions",
@@ -161,7 +178,7 @@ def initialize_gui_after_login():
         sugg_btns.append(btn)
 
     # ---------------- Control Buttons ----------------
-    control_frame = tk.Frame(root, bg=COLORS['bg_primary'])
+    control_frame = tk.Frame(content, bg=COLORS['bg_primary'])
     control_frame.grid(row=3, column=0, columnspan=5, padx=20, pady=10, sticky='ew')
     buttons_container = tk.Frame(control_frame, bg=COLORS['bg_primary'])
     buttons_container.pack(fill='x', pady=5)
@@ -187,10 +204,16 @@ def initialize_gui_after_login():
     history_btn.pack(side='left', padx=8, fill='x', expand=True)
 
     for i in range(5):
-        root.grid_columnconfigure(i, weight=1)
+        content.grid_columnconfigure(i, weight=1)
 
     # ---------------- Webcam ----------------
     cap = cv2.VideoCapture(0)
+    root.update_idletasks()
+    w = content.winfo_reqwidth() + vbar.winfo_reqwidth()
+    h = min(content.winfo_reqheight(), root.winfo_screenheight() - 120)   # taller content scrolls
+    x = max((root.winfo_screenwidth() - w) // 2, 0)
+    root.geometry(f"{w}x{h}+{x}+0")
+    root.minsize(520, 300)
     update_frame()
 
 # ---------------- Functions ----------------
@@ -260,6 +283,7 @@ def maybe_fetch_suggestions():
 def save_sentence_to_db():
     global sentence
     if not sentence.strip():
+        status_var.set("Nothing to save yet")
         return
     try:
         headers = {"Authorization": f"Bearer {jwt_token}"} if jwt_token else {}
@@ -270,11 +294,14 @@ def save_sentence_to_db():
             timeout=10
         )
         if response.status_code in [200, 201]:
-            print(f"✅ Saved sentence: {sentence.strip()}")
+            status_var.set("✅ Saved")
+        elif response.status_code == 401:
+            status_var.set("❌ Session expired. Close and log in again")
         else:
-            print(f"❌ Failed to save: {response.status_code}, {response.text}")
+            status_var.set(f"❌ Failed to save ({response.status_code})")
     except Exception as e:
-        print("❌ Error saving sentence:", e)
+        status_var.set("❌ Could not reach the server")
+    root.after(3000, lambda: status_var.set(""))
 
 def view_history():
     history_window = tk.Toplevel(root)
@@ -362,6 +389,7 @@ def update_frame():
         current_var.set("Current: _")
 
     maybe_fetch_suggestions()
+    frame = cv2.resize(frame, (480, 360))   # keeps the whole window (incl. buttons) on small screens
     img = Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
     imgtk = ImageTk.PhotoImage(image=img)
     video_panel.imgtk = imgtk
@@ -395,5 +423,9 @@ login_btn = tk.Button(login_frame, text="Login", font=("Segoe UI", 12, "bold"),
                       command=perform_login, bg='#3d4d4d', fg='white', relief='flat', bd=0,
                       cursor='hand2', activebackground='#5a6868', activeforeground='white')
 login_btn.pack(pady=20)
+
+# Launched from the web dashboard: reuse that login instead of asking again.
+if jwt_token:
+    initialize_gui_after_login()
 
 root.mainloop()

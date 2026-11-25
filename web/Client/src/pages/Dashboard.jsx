@@ -196,7 +196,11 @@ export default function Dashboard({ setIsAuthenticated }) {
       setLoading(true)
       setMessage("")
 
-      const res = await axios.post("http://localhost:5000/api/open-webcam")
+      const res = await axios.post(
+        "http://localhost:5000/api/open-webcam",
+        {},
+        { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } },
+      )
       setMessage(res.data.message || "✅ Sign2Voice is ready!")
 
       if (res.data.sessionId) {
@@ -204,6 +208,7 @@ export default function Dashboard({ setIsAuthenticated }) {
       }
     } catch (err) {
       console.error(err)
+      setMessage("❌ " + (err.response?.data?.error || "Could not start Sign2Voice"))
     } finally {
       setLoading(false)
     }

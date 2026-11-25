@@ -9,6 +9,7 @@ import adminPanelRoutes from "./route/adminPanel.js";
 import { spawn } from "child_process";
 import path from "path";
 import { fileURLToPath } from "url";
+import { verifyToken } from "./middleware/authmiddleware.js";
 
 dotenv.config();
 const app = express();
@@ -41,9 +42,19 @@ app.get("/api/health", (req, res) => {
 });
 
 // Open Sign2Voice GUI
-app.post("/api/open-webcam", (req, res) => {
+let guiProcess = null; // only one desktop GUI at a time
+app.post("/api/open-webcam", verifyToken, (req, res) => {
+  if (guiProcess && guiProcess.exitCode === null) {
+    return res.json({ message: "Sign2Voice is already running. Look for its window." });
+  }
   const guiPath = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../desktop/gui_main.py");
-  const pythonProcess = spawn(process.env.PYTHON_BIN || "python", [guiPath]);
+  // The logged-in user's token goes to the GUI via an environment variable (not argv, which other
+  // processes can read), so the user does not have to log in a second time.
+  const token = req.header("Authorization").replace("Bearer ", "");
+  const pythonProcess = spawn(process.env.PYTHON_BIN || "python", [guiPath], {
+    env: { ...process.env, SIGN2VOICE_TOKEN: token },
+  });
+  guiProcess = pythonProcess;
   let hasResponded = false;
 
   const timeout = setTimeout(() => {
@@ -51,7 +62,7 @@ app.post("/api/open-webcam", (req, res) => {
       hasResponded = true;
       res.status(500).json({ error: "Python script initialization timeout" });
     }
-  }, 30000);
+  }, 120000);
 
   pythonProcess.stdout.on("data", (data) => {
     const output = data.toString();
