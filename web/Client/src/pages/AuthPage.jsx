@@ -322,7 +322,7 @@ export default function AuthPage({ setIsAuthenticated }) {
 
                 {/* Admin Login Button */}
                 <button
-                  onClick={() => router.push("/admin-login")}
+                  onClick={() => navigate("/admin-login")}
                   className="text-yellow-400 hover:text-yellow-300 font-medium flex items-center justify-center gap-2 mt-2"
                 >
                   <Lock className="w-4 h-4" />

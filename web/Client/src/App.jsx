@@ -7,6 +7,12 @@ import Dashboard from "./pages/Dashboard"
 import AdminLogin from "./pages/AdminLogin"
 import AdminPanel from "./pages/AdminPanel" // ✅ import AdminPanel
 
+// Reads the admin token at render time of the route (not once when App mounts), so logging in
+// and navigating to /admin-panel works without a page reload.
+function RequireAdmin({ children }) {
+  return localStorage.getItem("adminToken") ? children : <Navigate to="/admin-login" />
+}
+
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [loading, setLoading] = useState(true)
@@ -17,7 +23,6 @@ function App() {
     setLoading(false)
   }, [])
 
-  const adminToken = localStorage.getItem("adminToken") // ✅ admin token
 
   if (loading) {
     return (
@@ -54,7 +59,9 @@ function App() {
           <Route
             path="/admin-panel"
             element={
-              adminToken ? <AdminPanel /> : <Navigate to="/admin-login" />
+              <RequireAdmin>
+                <AdminPanel />
+              </RequireAdmin>
             }
           />
         </Routes>
