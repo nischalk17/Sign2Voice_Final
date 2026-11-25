@@ -56,7 +56,7 @@ Take-aways:
 
 ### Limitations (please read)
 * Webcam data comes from one person in two lighting conditions. It tests lighting and setup, not new signers.
-* The block split assumes Kaggle image numbers follow video order (not verified).
+* The block split assumes Kaggle image numbers follow video order. This was checked on the landmarks (neighbouring ids are ~10x closer than random pairs), and a 100-frame gap instead of 25 changed accuracy by only 0.4 points (one seed).
 * Attack results are PGD-20 on a 5,000-sample subset, white-box, in landmark space only. MediaPipe is not attacked, no
   adaptive attacks, no certification. Treat them as upper bounds on true robustness.
 * `J` and `Z` are motion letters and are classified from single frames.
@@ -136,8 +136,13 @@ Current state, checked by reading the code:
 * Passwords are hashed with bcrypt; sessions are JWTs that expire after 1 day; CORS only allows the web client origin.
 * `/api/open-webcam` (which starts the desktop GUI) requires a valid login, and only one GUI instance can run at a time.
   The session token is handed to the GUI through an environment variable (not a command-line argument) and kept in memory only.
+* Login and register endpoints are rate limited (20 attempts / 15 min / IP), accept only plain strings (no NoSQL operator
+  injection), return generic error messages, and request bodies are capped at 100 kB. `npm audit` reports 0 known
+  vulnerabilities in both Node projects (checked 2026-11-25; re-run it before relying on this).
+* The "Open Sign2Voice" button starts the GUI **on the machine running the server**, so it only makes sense when the server
+  runs locally. The web client also has `http://localhost:5000` hard-coded, so deploying it needs a configurable API URL.
 * Known limitations: traffic is plain HTTP (fine on localhost, use HTTPS if deployed); the web client stores its token in
-  `localStorage` (exposed if an XSS bug is introduced); the login endpoints have no rate limiting; there is no 2FA.
+  `localStorage` (exposed if an XSS bug is introduced); there is no 2FA; the old admin password is still visible in git history (tag `v0-original`), so never reuse it.
 
 ## License
 Code is released under the [MIT License](LICENSE). The datasets (Kaggle ASL Alphabet, `asl_dataset`), MediaPipe and

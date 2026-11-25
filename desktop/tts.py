@@ -6,7 +6,7 @@ _engine.setProperty("rate", 180)  # words-per-minute
 _engine.setProperty("volume", 1.0)
 
 def speak(text: str):
-    """Speak the given text aloud (non-blocking)."""
+    """Speak the given text aloud. Blocks until finished (the GUI freezes for a moment while speaking)."""
     if not text.strip():
         return
     _engine.say(text)

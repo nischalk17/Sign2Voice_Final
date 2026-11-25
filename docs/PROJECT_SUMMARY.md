@@ -38,10 +38,10 @@ defences, 3 seeds each, identical splits per seed:
 * Webcam test data is from one person; it measures setup robustness, not signer generalization.
 * Attacks are PGD-20 on a 5,000-sample subset, in landmark space only; MediaPipe is not attacked, no adaptive attacks or certification.
   The robust-accuracy numbers are upper bounds.
-* The block split assumes Kaggle image numbers follow video order; I did not verify this.
+* The block split assumes Kaggle image numbers follow video order. I checked this on the landmarks (neighbouring frames are ~10x closer than random pairs); widening the gap from 25 to 100 frames changed accuracy by 0.4 points (one seed).
 * J and Z are motion letters evaluated on single frames.
 
-## What I learned (usable in a statement)
+## What I learned
 * How easily a strong-looking benchmark number can be an artifact of the split, and how to design and test a leakage-aware one.
 * To report effect sizes with seeds and error bars, and to state a threat model before attacking a model.
 * Verifying the whole path (running the web app and GUI end to end) found five bugs that code reading had not.

@@ -6,7 +6,7 @@ import numpy as np
 rows = defaultdict(list)
 for p in sorted(glob.glob("ml/runs/*/metrics.json")):
     m = json.load(open(p))
-    if "mode" not in m:
+    if "mode" not in m or m.get("gap", 25) != 25:   # gap != 25 runs are sensitivity checks, reported separately
         continue
     rows[(m["split"], m["mode"])].append(m)
 

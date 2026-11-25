@@ -14,6 +14,9 @@ const getJwtSecret = () => {
 router.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;
+    if (typeof email !== "string" || typeof password !== "string") {
+      return res.status(400).json({ message: "Invalid credentials" });
+    }
 
     const admin = await Admin.findOne({ email });
     if (!admin) return res.status(400).json({ message: "Invalid credentials" });
@@ -21,10 +24,11 @@ router.post("/login", async (req, res) => {
     const isMatch = await admin.comparePassword(password);
     if (!isMatch) return res.status(400).json({ message: "Invalid credentials" });
 
-    const token = jwt.sign({ id: admin._id, role: admin.role }, getJwtSecret(),{ expiresIn: "7d" });
+    const token = jwt.sign({ id: admin._id, role: admin.role }, getJwtSecret(),{ expiresIn: "1d" });
     res.json({ token, admin: { id: admin._id, email: admin.email, role: admin.role } });
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    console.error("Admin login error:", err);
+    res.status(500).json({ message: "Login failed" });
   }
 });
 

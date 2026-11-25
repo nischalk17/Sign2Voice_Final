@@ -9,6 +9,10 @@ const router = express.Router()
 router.post("/register", async (req, res) => {
   try {
     const { username, email, password } = req.body
+    // Only plain strings: objects like {"$ne": null} would otherwise reach the Mongo query (NoSQL injection).
+    if ([username, email, password].some((v) => typeof v !== "string")) {
+      return res.status(400).json({ message: "Invalid input" })
+    }
     if (!username || !email || !password) {
       return res.status(400).json({ message: "All fields are required" })
     }
@@ -22,9 +26,9 @@ router.post("/register", async (req, res) => {
       })
     }
 
-    const existingUser = await User.findOne({ email })
+    const existingUser = await User.findOne({ $or: [{ email: email.toLowerCase().trim() }, { username: username.trim() }] })
     if (existingUser) {
-      return res.status(400).json({ message: "User already exists" })
+      return res.status(400).json({ message: "Username or email already in use" })
     }
 
     const newUser = new User({ username, email, password })
@@ -37,7 +41,8 @@ router.post("/register", async (req, res) => {
       .status(201)
       .json({ user: { id: newUser._id, username, email }, token })
   } catch (err) {
-    res.status(500).json({ message: err.message })
+    console.error("Register error:", err)
+    res.status(500).json({ message: "Registration failed" })
   }
 })
 
@@ -45,7 +50,7 @@ router.post("/register", async (req, res) => {
 router.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body
-    if (!email || !password)
+    if (typeof email !== "string" || typeof password !== "string" || !email || !password)
       return res.status(400).json({ message: "All fields are required" })
 
     const user = await User.findOne({ email })
@@ -61,7 +66,8 @@ router.post("/login", async (req, res) => {
       .status(200)
       .json({ user: { id: user._id, username: user.username, email }, token })
   } catch (err) {
-    res.status(500).json({ message: err.message })
+    console.error("Login error:", err)
+    res.status(500).json({ message: "Login failed" })
   }
 })
 

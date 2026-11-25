@@ -13,12 +13,10 @@ export default function Dashboard({ setIsAuthenticated }) {
   const [stats, setStats] = useState(null)
   const [showHistory, setShowHistory] = useState(false)
   const [historyLoading, setHistoryLoading] = useState(false)
-  const [hoveredStat, setHoveredStat] = useState(null)
   const [currentTime, setCurrentTime] = useState(new Date())
   const [weather, setWeather] = useState({ temp: 22, condition: "Loading...", icon: "⏳" })
   const [systemStatus, setSystemStatus] = useState({ cpu: 0, memory: 0, network: "Checking..." })
   const [todayGoal, setTodayGoal] = useState({ target: 10, completed: 0 })
-  const [userLocation, setUserLocation] = useState(null)
   const navigate = useNavigate()
 
   const loadingSteps = [
@@ -97,7 +95,7 @@ export default function Dashboard({ setIsAuthenticated }) {
           memory: memoryUsage,
           network: networkStatus,
         })
-      } catch (error) {
+      } catch {
         setSystemStatus({
           cpu: Math.floor(Math.random() * 30) + 20,
           memory: Math.floor(Math.random() * 40) + 30,
@@ -125,7 +123,7 @@ export default function Dashboard({ setIsAuthenticated }) {
           })
           return
         }
-      } catch (error) {
+      } catch {
         console.log("Weather fetch failed, using location-based estimate")
       }
 
@@ -160,10 +158,9 @@ export default function Dashboard({ setIsAuthenticated }) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
           const { latitude, longitude } = position.coords
-          setUserLocation({ lat: latitude, lon: longitude })
           fetchWeather(latitude, longitude)
         },
-        (error) => {
+        () => {
           console.log("Location access denied, using IP-based location")
           fetch("https://ipapi.co/json/")
             .then((res) => res.json())
@@ -263,7 +260,6 @@ export default function Dashboard({ setIsAuthenticated }) {
   // Load the user's sentences once on mount so the daily goal is correct without opening History.
   useEffect(() => {
     if (localStorage.getItem("token")) fetchStats()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const toggleHistory = () => {

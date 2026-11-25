@@ -67,7 +67,11 @@ Rotations are applied in normalised image coordinates and ignore the image aspec
 ## Limitations
 * Webcam test sets come from **one person** in two lighting/position conditions: they measure robustness to lighting and
   setup, not generalisation across signers. The 5-signer set is small and cropped differently from the training data.
-* The block split assumes Kaggle image numbers follow video order; this was not verified.
+* The block split assumes Kaggle image numbers follow video order. Checked on the extracted landmarks: neighbouring ids are about
+  10x closer than random same-class pairs (median landmark distance 0.08 vs 1.24) and similarity fades to random level by
+  50-100 ids apart, so the ordering holds. The 25-id gap leaves some residual similarity at block edges, so a single seed
+  (42) was re-run with a 100-id gap: 96.0 % vs 96.4 % with gap 25, within seed noise (std 0.45), so the headline is not
+  inflated by the gap choice.
 * Attack evaluation: PGD-20 on a 5,000-sample subset, landmark space only, white-box; no adaptive attacks, no certification.
 * J and Z are motion letters evaluated as single frames.
 * 3 seeds: differences below roughly one standard deviation should not be interpreted.

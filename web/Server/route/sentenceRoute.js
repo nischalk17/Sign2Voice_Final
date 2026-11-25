@@ -10,14 +10,17 @@ router.post("/save", verifyToken, async (req, res) => {
   try {
     const { text, sessionId } = req.body;
 
-    if (!text || text.trim() === "") {
+    if (typeof text !== "string" || text.trim() === "") {
       return res.status(400).json({ error: "Sentence cannot be empty" });
+    }
+    if (text.length > 2000) {
+      return res.status(400).json({ error: "Sentence is too long (max 2000 characters)" });
     }
 
     const sentence = new Sentence({
       user: req.user._id, // assign current logged-in user
       text: text.trim(),
-      sessionId: sessionId || new mongoose.Types.ObjectId().toString(),
+      sessionId: typeof sessionId === "string" && sessionId ? sessionId.slice(0, 100) : new mongoose.Types.ObjectId().toString(),
       source: "gui",
     });
 
@@ -38,14 +41,17 @@ router.post("/", verifyToken, async (req, res) => {
   try {
     const { text, sessionId } = req.body;
 
-    if (!text || text.trim() === "") {
+    if (typeof text !== "string" || text.trim() === "") {
       return res.status(400).json({ error: "Sentence cannot be empty" });
+    }
+    if (text.length > 2000) {
+      return res.status(400).json({ error: "Sentence is too long (max 2000 characters)" });
     }
 
     const sentence = new Sentence({
       user: req.user._id,
       text: text.trim(),
-      sessionId: sessionId || new mongoose.Types.ObjectId().toString(),
+      sessionId: typeof sessionId === "string" && sessionId ? sessionId.slice(0, 100) : new mongoose.Types.ObjectId().toString(),
       source: "web",
     });
 

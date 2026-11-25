@@ -196,7 +196,7 @@ def initialize_gui_after_login():
     save_btn.pack(side='left', padx=8, fill='x', expand=True)
 
     exit_btn = create_hover_button(buttons_container, tk.StringVar(value="❌ Exit"),
-                                  root.destroy, COLORS['btn_exit'], COLORS['btn_exit_hover'])
+                                  lambda: on_close(), COLORS['btn_exit'], COLORS['btn_exit_hover'])
     exit_btn.pack(side='left', padx=8, fill='x', expand=True)
 
     history_btn = create_hover_button(buttons_container, tk.StringVar(value="📜 View History"),
@@ -350,6 +350,8 @@ def view_history():
 # ---------------- Webcam Frame Update ----------------
 def update_frame():
     global sentence, last_added
+    if not running:
+        return
     ok, frame = cap.read()
     if not ok:
         root.after(10, update_frame)
@@ -423,6 +425,21 @@ login_btn = tk.Button(login_frame, text="Login", font=("Segoe UI", 12, "bold"),
                       command=perform_login, bg='#3d4d4d', fg='white', relief='flat', bd=0,
                       cursor='hand2', activebackground='#5a6868', activeforeground='white')
 login_btn.pack(pady=20)
+
+running = True
+
+def on_close():
+    """Stop the frame loop, release the webcam and MediaPipe, then close the window."""
+    global running
+    running = False
+    try:
+        cap.release()
+        hands.close()
+    except Exception:
+        pass
+    root.destroy()
+
+root.protocol("WM_DELETE_WINDOW", on_close)
 
 # Launched from the web dashboard: reuse that login instead of asking again.
 if jwt_token:

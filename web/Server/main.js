@@ -10,6 +10,7 @@ import { spawn } from "child_process";
 import path from "path";
 import { fileURLToPath } from "url";
 import { verifyToken } from "./middleware/authmiddleware.js";
+import rateLimit from "express-rate-limit";
 
 dotenv.config();
 const app = express();
@@ -21,8 +22,18 @@ app.use(
     credentials: true,
   })
 );
-app.use(express.json({ limit: "10mb" }));
+app.use(express.json({ limit: "100kb" }));
 app.use(express.urlencoded({ extended: true }));
+
+// Slow down password guessing: 20 attempts per 15 minutes per IP on every login/register endpoint.
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { message: "Too many attempts. Try again in a few minutes." },
+});
+app.use(["/api/auth/login", "/api/auth/register", "/api/admin/login"], authLimiter);
 
 // Public / User Routes
 app.use("/api/auth", authRoutes);
