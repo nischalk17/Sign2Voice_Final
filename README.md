@@ -117,11 +117,24 @@ pip install -r desktop/requirements.txt
 python desktop/gui_main.py     # log in with an account created in the web app (server must be running)
 ```
 It loads `ml/models/landmark_cnn.keras`. Sign a letter and hold it steady; the GUI uses a confidence threshold and a majority
-vote over recent frames.
+vote over recent frames. Buttons: Clear, Speak, Save (stores the sentence in your account; a status line shows the result),
+View History, Exit. The page scrolls (scrollbar or mouse wheel), so all controls stay reachable at any window size.
+
+Two ways to start it:
+* **From the web dashboard ("Open Sign2Voice")**: you are already logged in, so the GUI reuses that session and skips its own login.
+  The first launch can take 1-2 minutes (TensorFlow and torch load, and distilgpt2 weights of about 350 MB are downloaded once).
+* **From a terminal** (`python desktop/gui_main.py`): the GUI shows its own login screen.
 
 ## Security notes
 Earlier versions of this repo hard-coded an admin password and fell back to the JWT secret `"secret"`. Both are fixed
 (secrets come from environment variables only). Any credentials from the old history should be considered compromised and rotated.
+
+Current state, checked by reading the code:
+* Passwords are hashed with bcrypt; sessions are JWTs that expire after 1 day; CORS only allows the web client origin.
+* `/api/open-webcam` (which starts the desktop GUI) requires a valid login, and only one GUI instance can run at a time.
+  The session token is handed to the GUI through an environment variable (not a command-line argument) and kept in memory only.
+* Known limitations: traffic is plain HTTP (fine on localhost, use HTTPS if deployed); the web client stores its token in
+  `localStorage` (exposed if an XSS bug is introduced); the login endpoints have no rate limiting; there is no 2FA.
 
 ## License
 Code is released under the [MIT License](LICENSE). The datasets (Kaggle ASL Alphabet, `asl_dataset`), MediaPipe and
