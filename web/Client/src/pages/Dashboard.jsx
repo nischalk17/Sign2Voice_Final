@@ -17,7 +17,7 @@ export default function Dashboard({ setIsAuthenticated }) {
   const [currentTime, setCurrentTime] = useState(new Date())
   const [weather, setWeather] = useState({ temp: 22, condition: "Loading...", icon: "⏳" })
   const [systemStatus, setSystemStatus] = useState({ cpu: 0, memory: 0, network: "Checking..." })
-  const [todayGoal, setTodayGoal] = useState({ target: 10, completed: 2 }) // Updated initial completed value to match attachment
+  const [todayGoal, setTodayGoal] = useState({ target: 10, completed: 0 })
   const [userLocation, setUserLocation] = useState(null)
   const navigate = useNavigate()
 
@@ -184,52 +184,12 @@ export default function Dashboard({ setIsAuthenticated }) {
     }
   }, [])
 
+  // Daily goal = number of sentences this user saved today (local date). No separate endpoint needed.
   useEffect(() => {
-    const updateDailyGoal = async () => {
-      try {
-        const token = localStorage.getItem("token")
-        if (token) {
-          const today = new Date().toISOString().split("T")[0]
-          const response = await axios.get(`http://localhost:5000/api/sentences/daily?date=${today}`, {
-            headers: { Authorization: `Bearer ${token}` },
-          })
-
-          if (response.data) {
-            setTodayGoal({
-              target: response.data.target || 10,
-              completed: response.data.completed || 0,
-            })
-          }
-        } else {
-          const localGoal = localStorage.getItem("dailyGoal")
-          if (localGoal) {
-            setTodayGoal(JSON.parse(localGoal))
-          }
-        }
-      } catch (error) {
-        console.log("Could not fetch daily goal, using defaults")
-      }
-    }
-
-    updateDailyGoal()
-    const goalTimer = setInterval(updateDailyGoal, 60000)
-    return () => clearInterval(goalTimer)
-  }, [])
-
-  useEffect(() => {
-    if (stats && stats.totalSentences) {
-      const today = new Date().toISOString().split("T")[0]
-      const todaySentences = sentences.filter((s) => {
-        const sentenceDate = new Date(s.createdAt || Date.now()).toISOString().split("T")[0]
-        return sentenceDate === today
-      }).length
-
-      setTodayGoal((prev) => ({
-        ...prev,
-        completed: todaySentences,
-      }))
-    }
-  }, [stats, sentences])
+    const isToday = (d) => new Date(d).toDateString() === new Date().toDateString()
+    const completed = sentences.filter((s) => s.createdAt && isToday(s.createdAt)).length
+    setTodayGoal((prev) => ({ ...prev, completed }))
+  }, [sentences])
 
   const handleOpenWebcam = async () => {
     try {
@@ -294,6 +254,12 @@ export default function Dashboard({ setIsAuthenticated }) {
       setMessage("❌ Failed to delete sentence")
     }
   }
+
+  // Load the user's sentences once on mount so the daily goal is correct without opening History.
+  useEffect(() => {
+    if (localStorage.getItem("token")) fetchStats()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const toggleHistory = () => {
     if (!showHistory) fetchStats()

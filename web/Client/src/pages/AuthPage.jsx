@@ -15,6 +15,7 @@ export default function AuthPage({ setIsAuthenticated }) {
   const navigate = useNavigate();
   const [isLogin, setIsLogin] = useState(true)
   const [showPassword, setShowPassword] = useState(false)
+  const [showConfirm, setShowConfirm] = useState(false)
   const [formData, setFormData] = useState({
     username: "",
     email: "",
@@ -275,15 +276,27 @@ export default function AuthPage({ setIsAuthenticated }) {
                 {!isLogin && (
                   <div>
                     <label className="block text-sm font-medium text-gray-300 mb-2">Confirm Password</label>
-                    <Input
-                      type="password"
-                      name="confirmPassword"
-                      placeholder="Confirm your password"
-                      value={formData.confirmPassword}
-                      onChange={handleChange}
-                      required={!isLogin}
-                      className="h-12 bg-gray-700 border-gray-600 text-white placeholder-gray-400 focus:border-blue-400 focus:ring-blue-400"
-                    />
+                    <div className="relative">
+                      <Input
+                        type={showConfirm ? "text" : "password"}
+                        name="confirmPassword"
+                        placeholder="Confirm your password"
+                        value={formData.confirmPassword}
+                        onChange={handleChange}
+                        required={!isLogin}
+                        className="h-12 bg-gray-700 border-gray-600 text-white placeholder-gray-400 focus:border-blue-400 focus:ring-blue-400 pr-12"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowConfirm(!showConfirm)}
+                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-300"
+                      >
+                        {showConfirm ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                      </button>
+                    </div>
+                    {formData.confirmPassword && formData.password !== formData.confirmPassword && (
+                      <p className="mt-2 text-sm text-red-400">Passwords do not match</p>
+                    )}
                   </div>
                 )}
 

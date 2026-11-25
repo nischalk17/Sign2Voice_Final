@@ -81,7 +81,8 @@ app.post("/api/open-webcam", (req, res) => {
     if (!hasResponded) {
       hasResponded = true;
       clearTimeout(timeout);
-      res.json({ message: "Python script completed" });
+      // GUI exited before signalling ready: report it as an error instead of a fake success.
+      res.status(500).json({ error: `Desktop GUI exited before it was ready (code ${code}). Check the server console and PYTHON_BIN.` });
     }
   });
 });

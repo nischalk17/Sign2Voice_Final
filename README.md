@@ -109,7 +109,7 @@ node main.js             # API on http://localhost:5000
 
 cd ../Client && npm install && npm run dev
 ```
-The server refuses to start without `JWT_SECRET`. Never commit `.env`.
+The server refuses to start without `JWT_SECRET`. Never commit `.env`. For the "Open Sign2Voice" button, set `PYTHON_BIN` to the venv python that has `desktop/requirements.txt` installed.
 
 ### 3. Desktop GUI
 ```bash
