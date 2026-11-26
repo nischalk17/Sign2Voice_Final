@@ -237,6 +237,37 @@ export default function Dashboard({ setIsAuthenticated }) {
           ))}
         </section>
 
+        <details className="group rounded-xl border border-border bg-card">
+          <summary className="flex cursor-pointer list-none items-center justify-between px-5 py-4">
+            <span>
+              <span className="block font-serif text-xl font-semibold tracking-tight">ASL alphabet reference</span>
+              <span className="block text-sm text-muted-foreground">Hold each letter steady for about a second. J and Z need a movement.</span>
+            </span>
+            <span className="text-sm text-primary group-open:hidden">Show</span>
+            <span className="hidden text-sm text-primary group-open:inline">Hide</span>
+          </summary>
+          <div className="border-t border-border p-4">
+            <img
+              src="/asl-alphabet.jpg"
+              alt="The American Sign Language manual alphabet, letters A to Z, shown as photographs of hand shapes"
+              className="mx-auto h-auto w-full max-w-md rounded-lg"
+              loading="lazy"
+            />
+            <p className="mt-3 text-center text-xs text-muted-foreground">
+              Image by Cwterp,{" "}
+              <a
+                href="https://commons.wikimedia.org/wiki/File:ABC_pict.png"
+                target="_blank"
+                rel="noreferrer"
+                className="underline underline-offset-2 hover:text-foreground"
+              >
+                public domain, via Wikimedia Commons
+              </a>
+              .
+            </p>
+          </div>
+        </details>
+
         <section>
           <div className="mb-4 flex items-baseline justify-between">
             <h2 className="font-serif text-2xl font-semibold tracking-tight">Saved sentences</h2>
@@ -278,6 +309,12 @@ export default function Dashboard({ setIsAuthenticated }) {
           )}
         </section>
       </main>
+
+      <footer className="border-t border-border">
+        <div className="mx-auto max-w-5xl px-6 py-6 text-sm text-muted-foreground">
+          Final Year Research Project by <span className="font-medium text-foreground">Nischal Dhoj Kunwar</span> &middot; MIT licensed
+        </div>
+      </footer>
     </div>
   )
 }

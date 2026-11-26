@@ -141,6 +141,9 @@ export default function AuthPage({ setIsAuthenticated }) {
             <a href="#how" className="hidden rounded-md px-3 py-2 text-muted-foreground hover:text-foreground sm:block">
               How it works
             </a>
+            <a href="#try" className="hidden rounded-md px-3 py-2 text-muted-foreground hover:text-foreground sm:block">
+              Try it
+            </a>
             <a href="#limits" className="hidden rounded-md px-3 py-2 text-muted-foreground hover:text-foreground sm:block">
               Accuracy
             </a>
@@ -159,13 +162,13 @@ export default function AuthPage({ setIsAuthenticated }) {
       <main>
         <section className="mx-auto grid max-w-6xl gap-12 px-6 py-14 lg:grid-cols-[1.1fr_1fr] lg:items-start lg:py-20">
           <div className="flex flex-col lg:pt-10">
-            <p className="mb-4 text-sm font-medium uppercase tracking-wider text-primary">ASL fingerspelling to text and speech</p>
+            <p className="mb-4 text-sm font-medium uppercase tracking-wider text-primary">Final Year Research Project</p>
             <h1 className="font-serif text-4xl font-semibold leading-[1.1] tracking-tight text-balance sm:text-5xl">
               Spell with your hands. Hear it spoken.
             </h1>
             <p className="mt-5 max-w-xl text-lg leading-relaxed text-muted-foreground text-pretty">
               Sign2Voice reads fingerspelled letters from your webcam, builds the sentence, suggests the next word and
-              reads it aloud. It is a student research project, built to be measured honestly.
+              reads it aloud. It is a Final Year Research Project, built to be measured honestly.
             </p>
             <ul className="mt-8 space-y-4">
               {[
@@ -321,7 +324,43 @@ export default function AuthPage({ setIsAuthenticated }) {
           </div>
         </section>
 
-        <section id="limits" className="mx-auto max-w-6xl px-6 py-16">
+        <section id="try" className="mx-auto grid max-w-6xl gap-10 px-6 py-16 md:grid-cols-[1fr_1.1fr] md:items-start">
+          <div>
+            <h2 className="font-serif text-3xl font-semibold tracking-tight">Try it yourself</h2>
+            <p className="mt-3 text-muted-foreground">
+              New to fingerspelling? Use this chart to practise. Sign into the app, open Sign2Voice, and spell a word letter by
+              letter in front of your webcam.
+            </p>
+            <ul className="mt-5 space-y-2 text-sm text-muted-foreground">
+              <li>Hold each letter steady for about a second so it is recognised.</li>
+              <li>Keep your whole hand in view, with a plain background and good light.</li>
+              <li>J and Z involve a movement (shown by the arrows) and are the least reliable letters.</li>
+            </ul>
+          </div>
+          <figure className="rounded-2xl border border-border bg-white p-4">
+            <img
+              src="/asl-alphabet.jpg"
+              alt="The American Sign Language manual alphabet, letters A to Z, shown as photographs of hand shapes"
+              className="mx-auto h-auto w-full max-w-md rounded-lg"
+              loading="lazy"
+            />
+            <figcaption className="mt-3 text-center text-xs text-muted-foreground">
+              The American manual alphabet. Image by Cwterp,{" "}
+              <a
+                href="https://commons.wikimedia.org/wiki/File:ABC_pict.png"
+                target="_blank"
+                rel="noreferrer"
+                className="underline underline-offset-2 hover:text-foreground"
+              >
+                public domain, via Wikimedia Commons
+              </a>
+              .
+            </figcaption>
+          </figure>
+        </section>
+
+        <section id="limits" className="border-t border-border bg-white">
+          <div className="mx-auto max-w-6xl px-6 py-16">
           <h2 className="font-serif text-3xl font-semibold tracking-tight">How accurate is it?</h2>
           <p className="mt-3 max-w-2xl text-muted-foreground">
             It depends heavily on who is signing and on the camera. These are measured numbers for the model used in this
@@ -348,12 +387,16 @@ export default function AuthPage({ setIsAuthenticated }) {
             </a>
             .
           </p>
+          </div>
         </section>
       </main>
 
       <footer className="border-t border-border">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-6 py-6 text-sm text-muted-foreground">
-          <span>&copy; {new Date().getFullYear()} Sign2Voice. MIT licensed.</span>
+          <span>
+            Final Year Research Project by <span className="font-medium text-foreground">Nischal Dhoj Kunwar</span> &middot; &copy;{" "}
+            {new Date().getFullYear()} Sign2Voice &middot; MIT licensed
+          </span>
           <span className="flex items-center gap-4">
             <a href={REPO_URL} target="_blank" rel="noreferrer" className="hover:text-foreground">
               Source code

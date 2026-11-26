@@ -1,5 +1,7 @@
 # Sign2Voice: Voice For All
 
+*Final Year Research Project by Nischal Dhoj Kunwar.*
+
 Real-time American Sign Language (ASL) fingerspelling recognition. A webcam frame goes through MediaPipe Hands to get
 21 hand landmarks, a small 1D-CNN classifies the letter, and the text is spoken aloud. It ships as a desktop GUI
 (Tkinter) and a MERN web app for accounts and saved transcripts.
@@ -17,6 +19,9 @@ Real-time American Sign Language (ASL) fingerspelling recognition. A webcam fram
 | MediaPipe Hands (landmark detector) | Pretrained by Google, used unmodified |
 | distilgpt2 (word suggestions) | Pretrained by Hugging Face, used unmodified, not evaluated |
 | Text-to-speech | `pyttsx3` (system voices) |
+
+ASL chart shown in the web app: *The American manual alphabet* by Cwterp, public domain, via
+[Wikimedia Commons](https://commons.wikimedia.org/wiki/File:ABC_pict.png).
 
 Dataset: Kaggle [ASL Alphabet](https://www.kaggle.com/datasets/grassknoted/asl-alphabet) (grassknoted), 87,000 images,
 3,000 per class. 28 classes are used (A-Z, `space`, `del`); `nothing` has too few detected hands and is dropped.
