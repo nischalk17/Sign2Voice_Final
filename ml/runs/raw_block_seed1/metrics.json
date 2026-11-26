@@ -1,0 +1,20 @@
+{
+  "accuracy": 0.9736374407582938,
+  "n": 20256,
+  "macro_f1": 0.9710070719420535,
+  "data": "ml/data/landmarks_v2.npz",
+  "mode": "raw",
+  "split": "block",
+  "name": "raw_block_seed1",
+  "epochs": 20,
+  "batch": 128,
+  "seed": 1,
+  "min_samples": 100,
+  "gap": 25,
+  "runs_dir": "ml/runs",
+  "n_train": 44113,
+  "n_test": 20256,
+  "classes": 28,
+  "final_train_acc": 0.9928213357925415,
+  "final_val_acc": 0.9922937154769897
+}

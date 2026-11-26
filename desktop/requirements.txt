@@ -1,0 +1,8 @@
+# Desktop GUI. Python 3.11. Pins match the environment the GUI was tested in (Windows, Nov 2026).
+# Install the ML pins first:  pip install -r ml/requirements.txt
+-r ../ml/requirements.txt
+Pillow==13.0.0
+requests==2.34.2        # talks to the web server (login / save transcript)
+pyttsx3==2.99           # offline text-to-speech
+transformers==5.24.1    # distilgpt2 word suggestions (pretrained, unmodified)
+torch==2.15.0
