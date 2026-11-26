@@ -78,6 +78,8 @@ docs/          ROBUSTNESS.md
 ```
 
 ## Run it
+The install steps below were verified from a fresh clone on Windows with Python 3.11 and Node (2026-11-25): both pip installs, `npm ci`
+in `web/Server` and `web/Client`, the client build, a 1-epoch training smoke test, and loading the shipped model.
 
 ### 1. ML pipeline (Python 3.11)
 ```bash
