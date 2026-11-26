@@ -1,0 +1,8 @@
+{
+  "name": "sign2voice-e2e",
+  "private": true,
+  "type": "module",
+  "description": "End-to-end test for Sign2Voice (see docs/TEST_REPORT.md)",
+  "scripts": { "test": "node e2e.mjs" },
+  "dependencies": { "puppeteer-core": "^25.19.0" }
+}

@@ -15,7 +15,9 @@ import sys
 import io
 
 # Fix Unicode print issues for Windows
-sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
+# line_buffering: when started by the web server, stdout is a pipe and would otherwise be block-buffered,
+# so the server would never see SIGN2VOICE_READY.
+sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', line_buffering=True)
 
 from tts import speak
 from suggestions import get_suggestions
@@ -40,7 +42,7 @@ hands = mp_hands.Hands(static_image_mode=False,
                        min_detection_confidence=0.3,
                        min_tracking_confidence=0.3)
 mp_draw = mp.solutions.drawing_utils
-print("SIGN2VOICE_READY")
+print("SIGN2VOICE_READY", flush=True)
 
 # ---------------- Tkinter GUI ----------------
 root = tk.Tk()

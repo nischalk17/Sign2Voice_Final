@@ -1,5 +1,7 @@
 # Sign2Voice: Voice For All
 
+*Final Year Research Project by Nischal Dhoj Kunwar.*
+
 Real-time American Sign Language (ASL) fingerspelling recognition. A webcam frame goes through MediaPipe Hands to get
 21 hand landmarks, a small 1D-CNN classifies the letter, and the text is spoken aloud. It ships as a desktop GUI
 (Tkinter) and a MERN web app for accounts and saved transcripts.
@@ -17,6 +19,9 @@ Real-time American Sign Language (ASL) fingerspelling recognition. A webcam fram
 | MediaPipe Hands (landmark detector) | Pretrained by Google, used unmodified |
 | distilgpt2 (word suggestions) | Pretrained by Hugging Face, used unmodified, not evaluated |
 | Text-to-speech | `pyttsx3` (system voices) |
+
+ASL chart shown in the web app: *The American manual alphabet* by Cwterp, public domain, via
+[Wikimedia Commons](https://commons.wikimedia.org/wiki/File:ABC_pict.png).
 
 Dataset: Kaggle [ASL Alphabet](https://www.kaggle.com/datasets/grassknoted/asl-alphabet) (grassknoted), 87,000 images,
 3,000 per class. 28 classes are used (A-Z, `space`, `del`); `nothing` has too few detected hands and is dropped.
@@ -63,6 +68,12 @@ Take-aways:
 * 4 letters get zero recall on the external set (D, N, T, Z) and about 10 on the webcam; the cause is not established.
 * Word suggestions (distilgpt2) were not evaluated.
 
+## Screenshots
+Web app (example data): sign-in page and dashboard.
+
+![Sign-in page](docs/screenshots/sign-in.png)
+![Dashboard](docs/screenshots/dashboard.png)
+
 ## Repository layout
 ```
 ml/            training, evaluation, robustness study, results
@@ -78,6 +89,7 @@ docs/          ROBUSTNESS.md
 ```
 
 ## Run it
+Test evidence (end-to-end results, test accounts, what was and was not covered): [`docs/TEST_REPORT.md`](docs/TEST_REPORT.md).
 The install steps below were verified from a fresh clone on Windows with Python 3.11 and Node (2026-11-25): both pip installs, `npm ci`
 in `web/Server` and `web/Client`, the client build, a 1-epoch training smoke test, and loading the shipped model.
 
