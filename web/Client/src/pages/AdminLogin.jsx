@@ -2,11 +2,9 @@
 
 import { useState } from "react";
 import axios from "axios";
-import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { motion } from "framer-motion";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, Hand, AlertCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 const API_BASE = "http://localhost:5000/api/admin"; // Admin routes
@@ -43,70 +41,75 @@ export default function AdminLogin() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-900 flex items-center justify-center p-6">
-      <Card className="w-full max-w-md bg-gray-800 shadow-xl border border-gray-700 rounded-2xl overflow-hidden">
-        <CardHeader className="bg-gray-700 text-white text-center py-8">
-          <CardTitle className="text-2xl font-bold">Admin Login</CardTitle>
-          <p className="text-gray-300 mt-2">Sign in with your admin credentials</p>
-        </CardHeader>
+    <div className="grid min-h-screen place-items-center bg-background px-6 py-10 text-foreground">
+      <div className="w-full max-w-sm">
+        <div className="mb-6 flex items-center justify-center gap-2.5">
+          <span className="grid size-9 place-items-center rounded-xl bg-primary text-primary-foreground">
+            <Hand className="size-5" />
+          </span>
+          <span className="font-serif text-xl font-semibold tracking-tight">Sign2Voice</span>
+        </div>
 
-        <CardContent className="p-8">
-          <form onSubmit={handleLogin} className="space-y-5">
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">Email</label>
+        <div className="rounded-2xl border border-border bg-card p-7 shadow-[0_1px_2px_rgba(31,36,33,0.04),0_8px_30px_rgba(31,36,33,0.06)]">
+          <h1 className="font-serif text-2xl font-semibold tracking-tight">Admin sign in</h1>
+          <p className="mb-5 mt-1 text-sm text-muted-foreground">For administrators only.</p>
+
+          <form onSubmit={handleLogin} className="space-y-4">
+            <label className="block">
+              <span className="mb-1.5 block text-sm font-medium">Email</span>
               <Input
                 type="email"
                 name="email"
-                placeholder="Enter admin email"
+                autoComplete="username"
+                placeholder="admin@example.com"
                 value={formData.email}
                 onChange={handleChange}
                 required
-                className="h-12 bg-gray-700 border-gray-600 text-white placeholder-gray-400 focus:border-blue-400 focus:ring-blue-400"
+                className="h-11 bg-white"
               />
-            </div>
+            </label>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">Password</label>
+            <label className="block">
+              <span className="mb-1.5 block text-sm font-medium">Password</span>
               <div className="relative">
                 <Input
                   type={showPassword ? "text" : "password"}
                   name="password"
-                  placeholder="Enter password"
+                  autoComplete="current-password"
+                  placeholder="Password"
                   value={formData.password}
                   onChange={handleChange}
                   required
-                  className="h-12 bg-gray-700 border-gray-600 text-white placeholder-gray-400 focus:border-blue-400 focus:ring-blue-400 pr-12"
+                  className="h-11 bg-white pr-11"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-300"
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                  className="absolute right-2 top-1/2 grid size-8 -translate-y-1/2 place-items-center rounded-md text-muted-foreground hover:bg-secondary hover:text-foreground"
                 >
-                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
                 </button>
               </div>
-            </div>
+            </label>
 
-            <Button
-              type="submit"
-              disabled={loading}
-              className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white font-medium"
-            >
-              {loading ? "Signing in..." : "Sign In"}
+            {error && (
+              <div role="alert" className="flex items-start gap-2 rounded-lg bg-danger-soft px-3 py-2.5 text-sm text-destructive">
+                <AlertCircle className="mt-0.5 size-4 shrink-0" />
+                <span>{error}</span>
+              </div>
+            )}
+
+            <Button type="submit" disabled={loading} className="h-11 w-full text-base">
+              {loading ? "Signing in..." : "Sign in"}
             </Button>
           </form>
+        </div>
 
-          {error && (
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="mt-6 p-4 rounded-lg text-center text-sm font-medium bg-red-900/50 text-red-300 border border-red-800"
-            >
-              {error}
-            </motion.div>
-          )}
-        </CardContent>
-      </Card>
+        <button onClick={() => navigate("/")} className="mx-auto mt-5 block text-sm text-muted-foreground hover:text-foreground">
+          Back to the app
+        </button>
+      </div>
     </div>
   );
 }

@@ -26,7 +26,7 @@ function App() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="grid min-h-screen place-items-center bg-background text-muted-foreground">
         <p>Loading...</p>
       </div>
     )

@@ -63,6 +63,12 @@ Take-aways:
 * 4 letters get zero recall on the external set (D, N, T, Z) and about 10 on the webcam; the cause is not established.
 * Word suggestions (distilgpt2) were not evaluated.
 
+## Screenshots
+Web app (example data): sign-in page and dashboard.
+
+![Sign-in page](docs/screenshots/sign-in.png)
+![Dashboard](docs/screenshots/dashboard.png)
+
 ## Repository layout
 ```
 ml/            training, evaluation, robustness study, results
